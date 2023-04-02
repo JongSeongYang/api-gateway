@@ -17,6 +17,8 @@ on:
 env:
   S3_BUCKET_NAME: deploy-project-bucket
   PROJECT_NAME: api-gateway
+  CODE_DEPLOY_APPLICATION_NAME: someverything-app
+  CODE_DEPLOY_DEPLOYMENT_GROUP_NAME: someverything-codedeploy-group
 
 permissions:
   contents: read
@@ -58,3 +60,11 @@ jobs:
     # S3에 업로드
     - name: Upload to S3
       run: aws s3 cp --region ap-northeast-2 --acl private ./$GITHUB_SHA.zip s3://$S3_BUCKET_NAME/$PROJECT_NAME/$GITHUB_SHA.zip
+
+    - name: Code Deploy #4 # Code Deploy
+      run: |
+        aws deploy create-deployment \
+                  --application-name ${{ env.CODE_DEPLOY_APPLICATION_NAME }} \
+                  --deployment-config-name CodeDeployDefault.AllAtOnce \
+                  --deployment-group-name ${{ env.CODE_DEPLOY_DEPLOYMENT_GROUP_NAME }} \
+                  --s3-location bucket=$S3_BUCKET_NAME,key=$GITHUB_SHA.zip,bundleType=zip
